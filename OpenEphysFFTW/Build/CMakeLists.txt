@@ -11,7 +11,7 @@ get_filename_component(PROJECT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
 get_filename_component(COMMONLIB_NAME ${PROJECT_FOLDER} NAME)
 
 project(OE_COMMONLIB_${COMMONLIB_NAME})
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
+
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(LINUX 1)
 endif()
@@ -64,13 +64,16 @@ elseif(LINUX)
 	
 	install(TARGETS ${COMMONLIB_NAME} LIBRARY DESTINATION ${GUI_BIN_DIR}/shared)
 	set(CMAKE_LIBRARY_PATH ${GUI_BIN_DIR}/shared)
+
 elseif(APPLE)
-	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/MacOSX/build/)
+	set(GUI_BIN_DIR $ENV{HOME}/Library/Application\ Support/open-ephys)
 	set_target_properties(${COMMONLIB_NAME} PROPERTIES BUNDLE FALSE)
 	set_property(TARGET ${COMMONLIB_NAME} APPEND_STRING PROPERTY LINK_FLAGS
 	"-undefined dynamic_lookup")
 
-	install(TARGETS ${COMMONLIB_NAME} DESTINATION $ENV{HOME}/Library/Application\ Support/open-ephys/shared)
+	install(TARGETS ${COMMONLIB_NAME} DESTINATION ${GUI_BIN_DIR}/shared)
+
+	set(CMAKE_LIBRARY_PATH ${GUI_BIN_DIR}/shared)
 	set(CMAKE_PREFIX_PATH /opt/local)
 endif()
 
@@ -90,7 +93,7 @@ endforeach()
 
 #additional libraries
 
-find_library(FFTW_LIBRARIES NAMES libfftw3-3 fftw3 fftw3-3)
+find_library(FFTW_LIBRARIES NAMES fftw3 fftw3-3)
 find_path(FFTW_INCLUDE_DIRS fftw3.h)
 
 target_link_libraries(${COMMONLIB_NAME} ${FFTW_LIBRARIES})
