@@ -16,7 +16,12 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(LINUX 1)
 endif()
 
-set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
+set(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Source)
+file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.cpp" "${SOURCE_PATH}/*.h")
+
+add_library(${COMMONLIB_NAME} SHARED ${SRC_FILES})
+
+target_compile_definitions(${COMMONLIB_NAME} PUBLIC
 	"$<$<PLATFORM_ID:Windows>:JUCE_API=__declspec(dllimport)>"
 	$<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
 	$<$<PLATFORM_ID:Linux>:JUCE_DISABLE_NATIVE_FILECHOOSERS=1>
@@ -24,11 +29,6 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
 	$<$<CONFIG:Debug>:_DEBUG=1>
 	$<$<CONFIG:Release>:NDEBUG=1>
 	)
-	
-set(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Source)
-file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.cpp" "${SOURCE_PATH}/*.h")
-
-add_library(${COMMONLIB_NAME} SHARED ${SRC_FILES})
 
 target_compile_features(${COMMONLIB_NAME} PUBLIC cxx_auto_type cxx_generalized_initializers)
 target_include_directories(${COMMONLIB_NAME} PUBLIC ${GUI_BASE_DIR}/JuceLibraryCode ${GUI_BASE_DIR}/JuceLibraryCode/modules ${GUI_BASE_DIR}/Source/Plugins/Headers)
@@ -42,14 +42,17 @@ if(MSVC)
 	else()
 		set(CMAKE_LIBRARY_ARCHITECTURE "x86")
 	endif()
+	set(GUI_BIN_DIR ${GUI_BIN_DIR}/$<IF:$<CONFIG:Debug>,Debug,Release>/bin)
 
-	target_link_libraries(${COMMONLIB_NAME} $<$<CONFIG:Debug>:${GUI_BIN_DIR}/Debug/bin/open-ephys.lib>)
-    target_link_libraries(${COMMONLIB_NAME} $<$<CONFIG:Release>:${GUI_BIN_DIR}/Release/bin/open-ephys.lib>)
+	target_link_libraries(${COMMONLIB_NAME} ${GUI_BIN_DIR}/open-ephys.lib)
 	target_compile_options(${COMMONLIB_NAME} PRIVATE /sdl-)
-	
-	install(TARGETS ${COMMONLIB_NAME} RUNTIME DESTINATION ${GUI_BIN_DIR}/Debug/bin/shared CONFIGURATIONS Debug)
-	install(TARGETS ${COMMONLIB_NAME} RUNTIME DESTINATION ${GUI_BIN_DIR}/Release/bin/shared CONFIGURATIONS Release)
-	set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
+
+	install(TARGETS ${COMMONLIB_NAME}
+		RUNTIME DESTINATION ${GUI_BIN_DIR}/shared
+		ARCHIVE DESTINATION ${GUI_BIN_DIR}/lib)
+
+	set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../libs, ${GUI_BIN_DIR})
+
 elseif(LINUX)
 	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/Linux/build)
 
@@ -60,6 +63,7 @@ elseif(LINUX)
 	target_compile_options(${COMMONLIB_NAME} PRIVATE -O3) #enable optimization for linux debug
 	
 	install(TARGETS ${COMMONLIB_NAME} LIBRARY DESTINATION ${GUI_BIN_DIR}/shared)
+	set(CMAKE_LIBRARY_PATH ${GUI_BIN_DIR}/shared)
 elseif(APPLE)
 	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/MacOSX/build/)
 	set_target_properties(${COMMONLIB_NAME} PROPERTIES BUNDLE FALSE)
@@ -69,6 +73,11 @@ elseif(APPLE)
 	install(TARGETS ${COMMONLIB_NAME} DESTINATION $ENV{HOME}/Library/Application\ Support/open-ephys/shared)
 	set(CMAKE_PREFIX_PATH /opt/local)
 endif()
+
+#copy and include common lib header files
+
+install(FILES ${SOURCE_PATH}/OpenEphysFFTW.h DESTINATION ${GUI_BIN_DIR}/include)
+target_include_directories(${COMMONLIB_NAME} PUBLIC ${GUI_BIN_DIR}/include)
 
 #create filters for vs and xcode
 
@@ -89,6 +98,5 @@ target_include_directories(${COMMONLIB_NAME} PRIVATE ${FFTW_INCLUDE_DIRS})
 
 #on windows, copy the dlls when installing
 if (MSVC)
-	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/bin/${CMAKE_LIBRARY_ARCHITECTURE}/ DESTINATION ${GUI_BIN_DIR}/Debug/bin/shared CONFIGURATIONS Debug)
-	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/bin/${CMAKE_LIBRARY_ARCHITECTURE}/ DESTINATION ${GUI_BIN_DIR}/Release/bin/shared CONFIGURATIONS Release)
+	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/bin/${CMAKE_LIBRARY_ARCHITECTURE}/ DESTINATION ${GUI_BIN_DIR}/shared)
 endif()
