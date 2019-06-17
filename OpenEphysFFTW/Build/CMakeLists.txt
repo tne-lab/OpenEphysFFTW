@@ -36,12 +36,16 @@ target_include_directories(${COMMONLIB_NAME} PUBLIC ${GUI_BASE_DIR}/JuceLibraryC
 #Libraries and compiler options
 if(MSVC)
 	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/VisualStudio2013)
-	if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+
+	if (CMAKE_GENERATOR_PLATFORM STREQUAL "x64")
 		set(GUI_BIN_DIR ${GUI_BIN_DIR}/x64)
 		set(CMAKE_LIBRARY_ARCHITECTURE "x64")
-	else()
+	elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32")
 		set(CMAKE_LIBRARY_ARCHITECTURE "x86")
+	else()
+		message(FATAL_ERROR "Unsupported generator platform ${CMAKE_GENERATOR_PLATFORM}")
 	endif()
+
 	set(GUI_BIN_DIR ${GUI_BIN_DIR}/$<IF:$<CONFIG:Debug>,Debug,Release>/bin)
 
 	target_link_libraries(${COMMONLIB_NAME} ${GUI_BIN_DIR}/open-ephys.lib)
@@ -57,7 +61,7 @@ if(MSVC)
 	install(DIRECTORY ${WINLIBS_DIR}/bin/${CMAKE_LIBRARY_ARCHITECTURE}/
 		DESTINATION ${GUI_BIN_DIR}/shared)
 
-	set(CMAKE_PREFIX_PATH ${WINLIBS_DIR} ${GUI_BIN_DIR})
+	set(CMAKE_PREFIX_PATH ${WINLIBS_DIR})
 
 elseif(LINUX)
 	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/Linux/build)
@@ -99,8 +103,16 @@ endforeach()
 
 #additional libraries
 
-find_library(FFTW_LIBRARIES NAMES fftw3 fftw3-3)
+find_library(FFTW_LIBRARY NAMES libfftw3-3 fftw3 fftw3-3)
 find_path(FFTW_INCLUDE_DIRS fftw3.h)
 
-target_link_libraries(${COMMONLIB_NAME} ${FFTW_LIBRARIES})
+if (NOT FFTW_LIBRARY)
+	message(FATAL_ERROR "FFTW library not found")
+endif()
+
+if (NOT FFTW_INCLUDE_DIRS)
+	message(FATAL_ERROR "FFTW header not found")
+endif()
+
+target_link_libraries(${COMMONLIB_NAME} ${FFTW_LIBRARY})
 target_include_directories(${COMMONLIB_NAME} PRIVATE ${FFTW_INCLUDE_DIRS})
