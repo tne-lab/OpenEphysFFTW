@@ -51,7 +51,13 @@ if(MSVC)
 		RUNTIME DESTINATION ${GUI_BIN_DIR}/shared
 		ARCHIVE DESTINATION ${GUI_BIN_DIR}/lib)
 
-	set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../libs, ${GUI_BIN_DIR})
+	set(WINLIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
+
+	# also install required DLLs
+	install(DIRECTORY ${WINLIBS_DIR}/bin/${CMAKE_LIBRARY_ARCHITECTURE}/
+		DESTINATION ${GUI_BIN_DIR}/shared)
+
+	set(CMAKE_PREFIX_PATH ${WINLIBS_DIR} ${GUI_BIN_DIR})
 
 elseif(LINUX)
 	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/Linux/build)
@@ -98,8 +104,3 @@ find_path(FFTW_INCLUDE_DIRS fftw3.h)
 
 target_link_libraries(${COMMONLIB_NAME} ${FFTW_LIBRARIES})
 target_include_directories(${COMMONLIB_NAME} PRIVATE ${FFTW_INCLUDE_DIRS})
-
-#on windows, copy the dlls when installing
-if (MSVC)
-	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/bin/${CMAKE_LIBRARY_ARCHITECTURE}/ DESTINATION ${GUI_BIN_DIR}/shared)
-endif()
