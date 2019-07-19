@@ -46,12 +46,13 @@ target_compile_features(${COMMONLIB_NAME} PUBLIC cxx_auto_type cxx_generalized_i
 target_include_directories(${COMMONLIB_NAME} PUBLIC
 	${GUI_BASE_DIR}/JuceLibraryCode
 	${GUI_BASE_DIR}/JuceLibraryCode/modules
-	${GUI_BASE_DIR}/Source/Plugins/Headers
+	${GUI_BASE_DIR}/Plugins/Headers
 	${GUI_COMMONLIB_DIR}/include)
+
+set(GUI_BIN_DIR ${GUI_BASE_DIR}/Build/$<CONFIG>)
 
 if (NOT CMAKE_LIBRARY_ARCHITECTURE)
 	if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-		set(GUI_BIN_DIR ${GUI_BIN_DIR}/x64)
 		set(CMAKE_LIBRARY_ARCHITECTURE "x64")
 	else()
 		set(CMAKE_LIBRARY_ARCHITECTURE "x86")
@@ -66,12 +67,6 @@ install(FILES ${HEADER_FILES} DESTINATION ${GUI_COMMONLIB_DIR}/include)
 
 #Libraries and compiler options
 if(MSVC)
-	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/VisualStudio2013)
-	if (CMAKE_LIBRARY_ARCHITECTURE STREQUAL "x64")
-		set(GUI_BIN_DIR ${GUI_BIN_DIR}/x64)
-	endif()
-	set(GUI_BIN_DIR ${GUI_BIN_DIR}/$<IF:$<CONFIG:Debug>,Debug,Release>/bin)
-
 	target_link_libraries(${COMMONLIB_NAME} ${GUI_BIN_DIR}/open-ephys.lib)
 	target_compile_options(${COMMONLIB_NAME} PRIVATE /sdl-)
 
@@ -85,8 +80,6 @@ if(MSVC)
 	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
 
 elseif(LINUX)
-	set(GUI_BIN_DIR ${GUI_BASE_DIR}/Builds/Linux/build)
-
 	target_link_libraries(${COMMONLIB_NAME} GL X11 Xext Xinerama asound dl freetype pthread rt)
 	set_property(TARGET ${COMMONLIB_NAME} APPEND_STRING PROPERTY LINK_FLAGS
 		"-fvisibility=hidden -fPIC -rdynamic -Wl,-rpath,'$ORIGIN'")
