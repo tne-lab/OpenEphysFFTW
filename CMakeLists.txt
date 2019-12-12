@@ -73,10 +73,11 @@ if(MSVC)
 	install(TARGETS ${COMMONLIB_NAME} RUNTIME DESTINATION ${GUI_BIN_DIR}/shared)
 
 	# also install dependency DLLs for runtime loading
-	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../libs/bin/${CMAKE_LIBRARY_ARCHITECTURE}/
+	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source/fftw-api/bin/${CMAKE_LIBRARY_ARCHITECTURE}/
 		DESTINATION ${GUI_BIN_DIR}/shared OPTIONAL)
 
-	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
+	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Source/fftw-api/)
+	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Source/fftw-api/libs/${CMAKE_LIBRARY_ARCHITECTURE}/)
 
 elseif(LINUX)
 	target_link_libraries(${COMMONLIB_NAME} GL X11 Xext Xinerama asound dl freetype pthread rt)
