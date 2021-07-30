@@ -2,7 +2,7 @@
 
 This is a small library to wrap FFTW functionality useful for Open Ephys.
 
-It is currently used by the [Phase Calculator](https://github.com/tne-lab/phase-calculator) and Real-Time Coherence plugins (under development).
+It is currently used by the [Phase Calculator](https://github.com/tne-lab/phase-calculator) and [Real-Time Coherence/Spectrogram plugin](https://github.com/tne-lab/Coherence-Spectrogram-Viewer).
 
 ## Dependency
 
